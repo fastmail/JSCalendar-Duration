@@ -12,10 +12,10 @@ our @EXPORT = qw(seconds_to_duration duration_to_seconds);
 sub duration_to_seconds {
   my $input = shift;
 
-  croak("Usage: duration_to_seconds(\$seconds). (Extra args provided: @_)")
+  croak("Usage: duration_to_seconds(\$duration). (Extra args provided: @_)")
     if @_;
 
-  croak('Usage; durations_to_seconds($duration)')
+  croak('Usage: duration_to_seconds($duration)')
     unless defined $input;
 
   # Let's get that out of the way
@@ -64,7 +64,7 @@ sub seconds_to_duration {
   croak("Usage: seconds_to_duration(\$seconds). (Extra args provided: @_)")
     if @_;
 
-  croak('Usage; durations_to_seconds($duration)')
+  croak('Usage: seconds_to_duration($seconds)')
     unless defined $input;
 
   my $toparse = $input;
