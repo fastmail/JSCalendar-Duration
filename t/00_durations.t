@@ -2,7 +2,10 @@ use strict;
 use warnings;
 
 use Test::More qw(no_plan);
-use JSCalendar::Duration qw(seconds_to_duration);
+use JSCalendar::Duration qw(
+  seconds_to_duration
+  duration_to_seconds
+);
 
 my @tests = (
   '0'        => 'P0D',
@@ -28,15 +31,29 @@ my @tests = (
   '172801'   => 'P2DT1S',
   '172801.1' => 'P2DT1.1S',
 );
-  
-while (@tests) {
-  my ($input, $expect) = (shift @tests, shift @tests);
 
-  is(
-    seconds_to_duration($input),
-    $expect,
-    sprintf("%-10s -> %-10s", $input, $expect),
-  );
-}
-  
+subtest "seconds_to_duration" => sub { 
+  for (my $i = 0; $i < @tests; $i += 2) {
+    my ($input, $expect) = ($tests[$i], $tests[$i+1]);
+
+    is(
+      seconds_to_duration($input),
+      $expect,
+      sprintf("%-10s -> %-10s", $input, $expect),
+    );
+  }
+};
+
+subtest "duration_to_seconds" => sub {
+  for (my $i = 0; $i < @tests; $i += 2) {
+    my ($expect, $input) = ($tests[$i], $tests[$i+1]);
+
+    is(
+      duration_to_seconds($input) + 0,
+      $expect + 0,
+      sprintf("%-15s -> %-10s", $input, $expect),
+    );
+  }
+};
+
 done_testing;
