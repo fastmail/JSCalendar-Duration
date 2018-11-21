@@ -1,5 +1,5 @@
 package JSCalendar::Duration;
-# ABSTRACT - Convert seconds into JSCalendar Durations (Section 3.2.3)
+# ABSTRACT: Convert seconds to JSCalendar durations and back
 
 use strict;
 use warnings;
@@ -133,3 +133,48 @@ sub seconds_to_duration {
 }
 
 1;
+__END__
+
+=head1 SYNOPSIS
+
+  use JSCalendar::Duration qw(
+    seconds_to_duration
+    duration_to_seconds
+  );
+
+  # 104403.1
+  my $seconds = duration_to_seconds("P1DT5H3.1S");
+
+  # P1D
+  my $duration = seconds_to_duration('86400');
+
+=head1 DESCRIPTION
+
+This module converts between a duration of time as specified by seconds and
+a JSCalendar duration (L<https://tools.ietf.org/html/draft-ietf-calext-jscalendar-00#section-3.2.3>).
+
+=head1 EXPORTS
+
+=head2 seconds_to_duration
+
+  my $duration = seconds_to_duration("86401.2");
+
+Converts seconds to a JSCalendar duration representation.
+
+=head2 duration_to_seconds
+
+  my $seconds = duration_to_seconds("P1DT4H");
+
+Converts a JSCalendar duration to seconds.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<https://tools.ietf.org/html/draft-ietf-calext-jscalendar-00#section-3.2.3>
+
+The JSCalendar duration spec.
+
+=back
+
+=cut
