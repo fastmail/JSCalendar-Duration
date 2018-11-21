@@ -68,7 +68,6 @@ sub seconds_to_duration {
     unless defined $input;
 
   my ($dec) = $input =~ /\.(\d+)$/;
-  my $precision = defined $dec ? length($dec) : 0;
 
   my ($durday, $durtime) = ("", "");
 
@@ -108,12 +107,7 @@ sub seconds_to_duration {
 
   $durtime .= "${seconds}" if $seconds;
 
-  # + 0, otherwise 0.0 comes out wrong
-  if ($input + 0) {
-    my $dec = sprintf("%.${precision}f", $input);
-
-    $dec =~ s/^0+\.//;
-
+  if ($dec) {
     $durtime .= $durtime ? ".${dec}S" : "0.${dec}S";
   } elsif ($seconds) {
     $durtime .= "S";

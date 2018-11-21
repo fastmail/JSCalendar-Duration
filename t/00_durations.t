@@ -10,6 +10,7 @@ use JSCalendar::Duration qw(
 my @tests = (
   '0'        => 'P0D',
   '0.0'      => 'P0D',
+  '0.1'      => 'PT0.1S',
   '.1'       => 'PT0.1S',
   '1'        => 'PT1S',
   '1.0'      => 'PT1S',
