@@ -67,42 +67,53 @@ sub seconds_to_duration {
   croak('Usage; durations_to_seconds($duration)')
     unless defined $input;
 
-  my ($dec) = $input =~ /\.(\d+)$/;
+  my $toparse = $input;
+
+  my $dec;
+
+  $dec = $1 if $toparse =~ s/\.(\d+)$//;
+
+  # .1 becomes "", we want 0 after
+  $toparse ||= 0;
+
+  if ($toparse && $toparse !~ /^\d+$/) {
+    croak("Usage: seconds_to_duration(\$seconds). (Non-number value provided: '$input'");
+  }
 
   my ($durday, $durtime) = ("", "");
 
   my $days = 0;
 
-  while ($input >= 86400) {
+  while ($toparse >= 86400) {
     $days++;
-    $input -= 86400;
+    $toparse -= 86400;
   }
 
   $durday = "${days}D" if $days;
 
   my $hours = 0;
 
-  while ($input >= 3600) {
+  while ($toparse >= 3600) {
     $hours++;
-    $input -= 3600;
+    $toparse -= 3600;
   }
 
   $durtime = "${hours}H" if $hours;
 
   my $minutes = 0;
 
-  while ($input >= 60) {
+  while ($toparse >= 60) {
     $minutes++;
-    $input -= 60;
+    $toparse -= 60;
   }
 
   $durtime .= "${minutes}M" if $minutes;
 
   my $seconds = 0;
 
-  while ($input >= 1) {
+  while ($toparse >= 1) {
     $seconds++;
-    $input -= 1;
+    $toparse -= 1;
   }
 
   $durtime .= "${seconds}" if $seconds;
