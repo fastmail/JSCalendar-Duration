@@ -25,6 +25,10 @@ sub duration_to_seconds {
 
   my $seconds = 0;
 
+  if ($toparse =~ /\P{ASCII}/) {
+    croak("Invalid duration '$input', must be entirely ASCII");
+  }
+
   unless ($toparse =~ s/^P//) {
     croak("Invalid duration '$input', must start with 'P'");
   }
