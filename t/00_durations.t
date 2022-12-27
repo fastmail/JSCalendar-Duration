@@ -33,7 +33,7 @@ my @tests = (
   '172801.1' => 'P2DT1.1S',
 );
 
-subtest "seconds_to_duration" => sub { 
+subtest "seconds_to_duration" => sub {
   for (my $i = 0; $i < @tests; $i += 2) {
     my ($input, $expect) = ($tests[$i], $tests[$i+1]);
 
