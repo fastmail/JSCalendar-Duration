@@ -25,8 +25,18 @@ sub duration_to_seconds {
 
   my $seconds = 0;
 
+  if ($toparse =~ /\P{ASCII}/) {
+    croak("Invalid duration '$input', must be entirely ASCII");
+  }
+
   unless ($toparse =~ s/^P//) {
     croak("Invalid duration '$input', must start with 'P'");
+  }
+
+  if ($toparse =~ s/^(\d+)W\z//) {
+    # Weeks must appear on their own, no day or time component.
+    $seconds += (86400 * 7 * $1);
+    return $seconds;
   }
 
   if ($toparse =~ s/^(\d+)D//) {
@@ -87,6 +97,10 @@ sub seconds_to_duration {
   while ($toparse >= 86400) {
     $days++;
     $toparse -= 86400;
+  }
+
+  if ($days && $days % 7 == 0 && $toparse == 0) {
+    return 'P' . ($days/7) . "W";
   }
 
   $durday = "${days}D" if $days;
