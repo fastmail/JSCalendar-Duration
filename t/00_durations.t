@@ -31,6 +31,8 @@ my @tests = (
   '172800'   => 'P2D',
   '172801'   => 'P2DT1S',
   '172801.1' => 'P2DT1.1S',
+  '604800'   => 'P1W',
+  '691200'   => 'P8D', # You must not have P1W1D
 );
 
 subtest "seconds_to_duration" => sub {
