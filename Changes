@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+        - updated repo metadata
 
 0.003     2022-12-27 16:47:45-05:00 America/New_York
         - add support for PnW for weekly durations
