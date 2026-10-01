@@ -93,4 +93,10 @@ subtest "empty components" => sub {
   duration_rejected('P1DT', qr{no components after 'T'});
 };
 
+subtest "trailing zero" => sub {
+  duration_rejected('P1D0',    qr{expected T here: '0'});
+  duration_rejected('PT1H0',   qr{confused by '0'});
+  duration_rejected('P1DT1H0', qr{confused by '0'});
+};
+
 done_testing;

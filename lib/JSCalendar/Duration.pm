@@ -47,7 +47,7 @@ sub duration_to_seconds {
     $seconds += (86400 * $1);
   }
 
-  return $seconds unless $toparse;
+  return $seconds unless length $toparse;
 
   unless ($toparse =~ s/^T//) {
     croak("Invalid duration '$input', expected T here: '$toparse'");
@@ -69,7 +69,7 @@ sub duration_to_seconds {
     $seconds += $1;
   }
 
-  if ($toparse) {
+  if (length $toparse) {
     croak("Invalid duration '$input': confused by '$toparse'");
   }
 
