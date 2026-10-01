@@ -33,6 +33,10 @@ sub duration_to_seconds {
     croak("Invalid duration '$input', must start with 'P'");
   }
 
+  unless (length $toparse) {
+    croak("Invalid duration '$input', no components after 'P'");
+  }
+
   if ($toparse =~ s/^(\d+)W\z//) {
     # Weeks must appear on their own, no day or time component.
     $seconds += (86400 * 7 * $1);
@@ -47,6 +51,10 @@ sub duration_to_seconds {
 
   unless ($toparse =~ s/^T//) {
     croak("Invalid duration '$input', expected T here: '$toparse'");
+  }
+
+  unless (length $toparse) {
+    croak("Invalid duration '$input', no components after 'T'");
   }
 
   if ($toparse =~ s/^(\d+)H//) {

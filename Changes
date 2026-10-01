@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+        - duration_to_seconds now rejects durations with no components,
+          like "P", "PT", and "P1DT"; these were treated as zero seconds
 
 0.004     2023-01-03 11:27:32-05:00 America/New_York
         - updated repo metadata
