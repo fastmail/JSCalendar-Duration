@@ -353,6 +353,32 @@ subtest "large seconds" => sub {
   );
 };
 
+subtest "large durations" => sub {
+  my $too_big = qr{whole seconds exceed 9007199254740991};
+
+  duration_rejected('PT9007199254740992S',     $too_big);
+  duration_rejected('PT150119987579017M',      $too_big);
+  duration_rejected('PT2501999792984H',        $too_big);
+  duration_rejected('P104249991375D',          $too_big);
+  duration_rejected('P14892855911W',           $too_big);
+  duration_rejected('P104249991374DT7H36M32S', $too_big);
+  duration_rejected('P' . '9' x 400 . 'D',     $too_big);
+  duration_rejected('PT' . '9' x 400 . 'S',    $too_big);
+
+  signed_duration_rejected(
+    '-PT9007199254740992S',
+    qr{Invalid duration '-PT9007199254740992S', whole seconds exceed},
+  );
+
+  duration_parses('PT9007199254740991S',       9007199254740991);
+  duration_parses('PT150119987579016M',        9007199254740960);
+  duration_parses('PT2501999792983H',          9007199254738800);
+  duration_parses('P14892855910W',             9007199254368000);
+  duration_parses('P14892855910WT103H36M31S',  9007199254740991);
+
+  # The limit is on whole seconds, so a fraction on top of it is allowed.
+  duration_parses('PT9007199254740991.5S',     9007199254740991.5);
+};
 
 subtest "signed round trips" => sub {
   signed_round_trip('0',          'P0D');

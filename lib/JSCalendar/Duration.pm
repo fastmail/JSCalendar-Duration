@@ -10,6 +10,10 @@ use Exporter qw(import);
 our @EXPORT = qw(seconds_to_duration duration_to_seconds);
 our @EXPORT_OK = qw(seconds_to_signed_duration signed_duration_to_seconds);
 
+# The most whole seconds we will convert in either direction.  This is the
+# largest integer that a double can hold exactly, so it is safe on every Perl.
+my $MAX_SECONDS = '9007199254740991'; # 2**53 - 1
+
 sub duration_to_seconds {
   my $input = shift;
 
@@ -55,7 +59,10 @@ sub _duration_to_seconds {
     $seconds += (86400 * $1);
   }
 
-  return $seconds unless length $toparse;
+  unless (length $toparse) {
+    _assert_not_too_many_seconds($input, $seconds);
+    return $seconds;
+  }
 
   unless ($toparse =~ s/^T//) {
     croak("Invalid duration '$input', expected T here: '$toparse'");
@@ -77,8 +84,10 @@ sub _duration_to_seconds {
     $has_minutes = 1;
   }
 
-  if ($toparse =~ s/^(\d+(\.\d+)?)S//) {
-    my ($value, $fraction) = ($1, $2);
+  my $fraction;
+
+  if ($toparse =~ s/^(\d+)(\.\d+)?S//) {
+    (my $whole, $fraction) = ($1, $2);
 
     # In the grammar, dur-hour may only be followed by dur-minute, so seconds
     # can't come right after hours: PT1H1S must be PT1H0M1S.
@@ -92,14 +101,28 @@ sub _duration_to_seconds {
       croak("Invalid duration '$input', fractional seconds may not end in zero");
     }
 
-    $seconds += $value;
+    $seconds += $whole;
   }
 
   if (length $toparse) {
     croak("Invalid duration '$input': confused by '$toparse'");
   }
 
-  return $seconds;
+  _assert_not_too_many_seconds($input, $seconds);
+
+  return defined $fraction ? $seconds + $fraction : $seconds;
+}
+
+# $seconds is the whole seconds in the duration $input, added up from its
+# components.  If the true total is over $MAX_SECONDS, the computed one is too,
+# even if the arithmetic was inexact or overflowed to infinity, because rounding
+# never carries a value past a number it can represent exactly, like 2**53.
+sub _assert_not_too_many_seconds {
+  my ($input, $seconds) = @_;
+
+  if ($seconds > $MAX_SECONDS) {
+    croak("Invalid duration '$input', whole seconds exceed $MAX_SECONDS");
+  }
 }
 
 sub seconds_to_duration {
@@ -143,10 +166,9 @@ sub _seconds_to_duration {
   # overflow or lose precision.  This limit is exact even on floating-point
   # Perl builds; the fractional part is kept separately as a string.
   $toparse =~ s/\A0+(?=[0-9])//;
-  my $max_seconds = '9007199254740991'; # 2**53 - 1
-  if (length($toparse) > length($max_seconds)
-      || (length($toparse) == length($max_seconds) && $toparse gt $max_seconds)) {
-    croak("Usage: $func(\$seconds). (Whole seconds exceed $max_seconds: '$input')");
+  if (length($toparse) > length($MAX_SECONDS)
+      || (length($toparse) == length($MAX_SECONDS) && $toparse gt $MAX_SECONDS)) {
+    croak("Usage: $func(\$seconds). (Whole seconds exceed $MAX_SECONDS: '$input')");
   }
 
   my ($durday, $durtime) = ("", "");
@@ -155,7 +177,7 @@ sub _seconds_to_duration {
   # inexact.  It is still safe to truncate: below 2**53, the rounding error is
   # always less than 1/86400, the smallest amount by which a quotient can fall
   # short of the next whole day, so it can never round up to it.  Raising
-  # $max_seconds would break this.
+  # $MAX_SECONDS would break this.
   my $days = int($toparse / 86400);
   $toparse %= 86400;
 
@@ -267,6 +289,10 @@ Fractional seconds are handled separately and do not count toward this limit.
 
 Converts a JSCalendar duration to seconds.
 
+The duration must not total more than 9007199254740991 (2**53 - 1) whole
+seconds, the same limit as C<seconds_to_duration>.  Longer durations throw an
+exception.
+
 =head1 OPTIONAL EXPORTS
 
 These are not exported by default, but can be requested by name.
@@ -287,6 +313,7 @@ The magnitude has the same whole-seconds limit as C<seconds_to_duration>.
 
 Converts a JSCalendar SignedDuration, which may have a leading C<+> or C<->,
 to seconds, which will be negative if the duration had a leading C<->.
+The magnitude has the same whole-seconds limit as C<duration_to_seconds>.
 
 =head1 SEE ALSO
 
