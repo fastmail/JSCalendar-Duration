@@ -73,7 +73,9 @@ sub duration_rejected {
   my $ok = eval { duration_to_seconds($input); 1 };
   my $error = $@;
 
-  ok(!$ok, "'$input' is rejected")
+  (my $desc = $input) =~ s/\n/\\n/g;
+
+  ok(!$ok, "'$desc' is rejected")
     and like($error, $error_re, "...with the expected error");
 }
 
@@ -205,6 +207,38 @@ subtest "trailing zero" => sub {
   duration_rejected('P1D0',    qr{expected T here: '0'});
   duration_rejected('PT1H0',   qr{confused by '0'});
   duration_rejected('P1DT1H0', qr{confused by '0'});
+};
+
+subtest "malformed durations" => sub {
+  duration_rejected('',          qr{must start with 'P'});
+  duration_rejected('1D',        qr{must start with 'P'});
+  duration_rejected(' P1D',      qr{must start with 'P'});
+  duration_rejected('p1d',       qr{must start with 'P'});
+  duration_rejected('-P1D',      qr{must start with 'P'});
+  duration_rejected('+P1D',      qr{must start with 'P'});
+
+  duration_rejected("P1D\n",     qr{expected T here});
+  duration_rejected("PT1S\n",    qr{confused by});
+  duration_rejected("P1W\n",     qr{expected T here});
+  duration_rejected("P0D\n",     qr{expected T here});
+  duration_rejected('P1D ',      qr{expected T here});
+
+  duration_rejected('P1',        qr{expected T here: '1'});
+  duration_rejected('PT1',       qr{confused by '1'});
+  duration_rejected('P1H',       qr{expected T here: '1H'});
+  duration_rejected('P1DT1D',    qr{confused by '1D'});
+  duration_rejected('PT1S1M',    qr{confused by '1M'});
+  duration_rejected('PT1M1H',    qr{confused by '1H'});
+  duration_rejected('PT1H1H',    qr{confused by '1H'});
+  duration_rejected('PT1S1S',    qr{confused by '1S'});
+  duration_rejected('PT1.5M',    qr{confused by '1.5M'});
+  duration_rejected('P1.5D',     qr{expected T here: '1.5D'});
+  duration_rejected('PT.5S',     qr{confused by '.5S'});
+  duration_rejected('PT1.S',     qr{confused by '1.S'});
+  duration_rejected('PT1,5S',    qr{confused by '1,5S'});
+  duration_rejected('PT-1S',     qr{confused by '-1S'});
+  duration_rejected('P1Y',       qr{expected T here: '1Y'});
+  duration_rejected('PT1h',      qr{confused by '1h'});
 };
 
 subtest "invalid seconds" => sub {
