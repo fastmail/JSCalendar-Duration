@@ -199,6 +199,7 @@ subtest "valid but non-canonical durations" => sub {
   duration_parses('P1WT0.5S',         604800.5);
   duration_parses('P2W3DT4H5M6.7S',   1483506.7);
   duration_parses('P1W1DT1H0M1S',     694801);
+  duration_parses('P1DT5H0M3.1S',     104403.1);
 };
 
 subtest "misplaced weeks" => sub {

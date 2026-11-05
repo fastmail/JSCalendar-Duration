@@ -242,7 +242,7 @@ __END__
   );
 
   # 104403.1
-  my $seconds = duration_to_seconds("P1DT5H3.1S");
+  my $seconds = duration_to_seconds("P1DT5H0M3.1S");
 
   # P1D
   my $duration = seconds_to_duration('86400');
@@ -250,7 +250,8 @@ __END__
 =head1 DESCRIPTION
 
 This module converts between a duration of time as specified by seconds and
-a JSCalendar duration (L<https://tools.ietf.org/html/draft-ietf-calext-jscalendar-00#section-3.2.3>).
+a JSCalendar Duration or SignedDuration, as defined in RFC 8984 sections 1.4.6
+and 1.4.7.
 
 =head1 EXPORTS
 
@@ -290,9 +291,13 @@ to seconds, which will be negative if the duration had a leading C<->.
 
 =over 4
 
-=item L<https://tools.ietf.org/html/draft-ietf-calext-jscalendar-00#section-3.2.3>
+=item L<https://www.rfc-editor.org/rfc/rfc8984.html#section-1.4.6>
 
-The JSCalendar duration spec.
+The JSCalendar Duration type, in RFC 8984.
+
+=item L<https://www.rfc-editor.org/rfc/rfc8984.html#section-1.4.7>
+
+The JSCalendar SignedDuration type, in RFC 8984.
 
 =back
 
