@@ -10,6 +10,8 @@ Revision history for {{$dist->name}}
           zeros, like "PT1.50S", or fractions of zero, like "PT0.00S"
         - seconds_to_duration no longer discards the fraction from a whole
           number of weeks plus a fraction; 604800.5 was "P1W"
+        - seconds_to_duration now rejects input with a trailing newline or
+          non-ASCII digits, which were accepted, sometimes yielding garbage
 
 0.005     2026-10-02 13:28:58-04:00 America/New_York
         - duration_to_seconds now rejects durations with no components,

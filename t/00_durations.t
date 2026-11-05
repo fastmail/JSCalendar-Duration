@@ -58,6 +58,20 @@ sub duration_rejected {
     and like($error, $error_re, "...with the expected error");
 }
 
+sub seconds_rejected {
+  my ($input, $error_re) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my $ok = eval { seconds_to_duration($input); 1 };
+  my $error = $@;
+
+  (my $desc = $input) =~ s/\n/\\n/g;
+
+  ok(!$ok, "'$desc' is rejected as seconds")
+    and like($error, $error_re, "...with the expected error");
+}
+
 subtest "round trips" => sub {
   round_trip('0',        'P0D');
   round_trip('0.0',      'P0D');
@@ -125,6 +139,25 @@ subtest "trailing zero" => sub {
   duration_rejected('P1D0',    qr{expected T here: '0'});
   duration_rejected('PT1H0',   qr{confused by '0'});
   duration_rejected('P1DT1H0', qr{confused by '0'});
+};
+
+subtest "invalid seconds" => sub {
+  my $non_number = qr{Non-number value provided};
+
+  seconds_rejected("60\n",   $non_number);
+  seconds_rejected("60.5\n", $non_number);
+  seconds_rejected(" 60",    $non_number);
+  seconds_rejected("60 ",    $non_number);
+  seconds_rejected("-60",    $non_number);
+  seconds_rejected("+60",    $non_number);
+  seconds_rejected("1e3",    $non_number);
+  seconds_rejected("1.2.3",  $non_number);
+  seconds_rejected("1.",     $non_number);
+  seconds_rejected("abc",    $non_number);
+  seconds_rejected("abc.5",  $non_number);
+
+  seconds_rejected("\N{THAI DIGIT THREE}",   $non_number);
+  seconds_rejected("1.\N{THAI DIGIT THREE}", $non_number);
 };
 
 done_testing;

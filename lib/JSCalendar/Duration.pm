@@ -91,15 +91,15 @@ sub seconds_to_duration {
 
   # RFC 8984 forbids trailing zeros in the fraction, and forbids a fraction
   # that is entirely zero, so we drop them, possibly leaving nothing.
-  if ($toparse =~ s/\.(\d+)$//) {
+  if ($toparse =~ s/\.([0-9]+)\z//) {
     ($dec = $1) =~ s/0+\z//;
   }
 
   # .1 becomes "", we want 0 after
   $toparse ||= 0;
 
-  if ($toparse && $toparse !~ /^\d+$/) {
-    croak("Usage: seconds_to_duration(\$seconds). (Non-number value provided: '$input'");
+  if ($toparse && $toparse !~ /\A[0-9]+\z/) {
+    croak("Usage: seconds_to_duration(\$seconds). (Non-number value provided: '$input')");
   }
 
   my ($durday, $durtime) = ("", "");
