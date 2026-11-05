@@ -8,6 +8,7 @@ use JSCalendar::Duration qw(
   seconds_to_duration
   duration_to_seconds
 );
+use Sub::Util ();
 
 binmode(Test::More->builder->$_, q{:encoding(UTF-8)})
   for qw(output failure_output todo_output);
@@ -64,33 +65,32 @@ sub duration_parses {
   );
 }
 
-
-sub duration_rejected {
-  my ($input, $error_re) = @_;
+# Check that calling $func with $input throws an error matching $error_re.
+sub is_rejected {
+  my ($func, $input, $error_re) = @_;
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-  my $ok = eval { duration_to_seconds($input); 1 };
+  my $ok = eval { $func->($input); 1 };
   my $error = $@;
 
   (my $desc = $input) =~ s/\n/\\n/g;
+  (my $name = Sub::Util::subname($func)) =~ s/\A.*:://;
 
-  ok(!$ok, "'$desc' is rejected")
+  ok(!$ok, "'$desc' is rejected by $name")
     and like($error, $error_re, "...with the expected error");
+}
+
+sub duration_rejected {
+  my ($input, $error_re) = @_;
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  is_rejected(\&duration_to_seconds, $input, $error_re);
 }
 
 sub seconds_rejected {
   my ($input, $error_re) = @_;
-
   local $Test::Builder::Level = $Test::Builder::Level + 1;
-
-  my $ok = eval { seconds_to_duration($input); 1 };
-  my $error = $@;
-
-  (my $desc = $input) =~ s/\n/\\n/g;
-
-  ok(!$ok, "'$desc' is rejected as seconds")
-    and like($error, $error_re, "...with the expected error");
+  is_rejected(\&seconds_to_duration, $input, $error_re);
 }
 
 subtest "round trips" => sub {
