@@ -139,14 +139,25 @@ sub _seconds_to_duration {
     croak("Usage: $func(\$seconds). (Non-number value provided: '$input')");
   }
 
+  # Compare as strings before doing arithmetic, so oversized inputs cannot
+  # overflow or lose precision.  This limit is exact even on floating-point
+  # Perl builds; the fractional part is kept separately as a string.
+  $toparse =~ s/\A0+(?=[0-9])//;
+  my $max_seconds = '9007199254740991'; # 2**53 - 1
+  if (length($toparse) > length($max_seconds)
+      || (length($toparse) == length($max_seconds) && $toparse gt $max_seconds)) {
+    croak("Usage: $func(\$seconds). (Whole seconds exceed $max_seconds: '$input')");
+  }
+
   my ($durday, $durtime) = ("", "");
 
-  my $days = 0;
-
-  while ($toparse >= 86400) {
-    $days++;
-    $toparse -= 86400;
-  }
+  # This division may be done in floating point, where the quotient can be
+  # inexact.  It is still safe to truncate: below 2**53, the rounding error is
+  # always less than 1/86400, the smallest amount by which a quotient can fall
+  # short of the next whole day, so it can never round up to it.  Raising
+  # $max_seconds would break this.
+  my $days = int($toparse / 86400);
+  $toparse %= 86400;
 
   if ($days && $days % 7 == 0 && $toparse == 0 && !length $dec) {
     return 'P' . ($days/7) . "W";
@@ -154,28 +165,13 @@ sub _seconds_to_duration {
 
   $durday = "${days}D" if $days;
 
-  my $hours = 0;
-
-  while ($toparse >= 3600) {
-    $hours++;
-    $toparse -= 3600;
-  }
+  my $hours = int($toparse / 3600);
+  $toparse %= 3600;
 
   $durtime = "${hours}H" if $hours;
 
-  my $minutes = 0;
-
-  while ($toparse >= 60) {
-    $minutes++;
-    $toparse -= 60;
-  }
-
-  my $seconds = 0;
-
-  while ($toparse >= 1) {
-    $seconds++;
-    $toparse -= 1;
-  }
+  my $minutes = int($toparse / 60);
+  my $seconds = $toparse % 60;
 
   # The grammar only permits seconds after minutes, so if we have hours and
   # seconds, we need minutes even if there are zero of them.
@@ -261,6 +257,10 @@ and 1.4.7.
 
 Converts seconds to a JSCalendar duration representation.
 
+The whole seconds must not exceed 9007199254740991 (2**53 - 1), the largest
+integer in the portable exact integer range.  Larger values throw an exception.
+Fractional seconds are handled separately and do not count toward this limit.
+
 =head2 duration_to_seconds
 
   my $seconds = duration_to_seconds("P1DT4H");
@@ -278,6 +278,7 @@ These are not exported by default, but can be requested by name.
 
 Converts seconds, which may be negative, to a JSCalendar SignedDuration.
 Negative values get a leading C<->.  Positive values and zero get no sign.
+The magnitude has the same whole-seconds limit as C<seconds_to_duration>.
 
 =head2 signed_duration_to_seconds
 

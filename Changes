@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+        - seconds_to_duration and seconds_to_signed_duration now reject
+          whole seconds above 2**53 - 1; very large inputs used to make them
+          loop forever, and they are now much faster on large inputs
         - seconds_to_duration no longer omits the whole seconds before a
           fraction, as in "PT1M.5S"; it now produces "PT1M0.5S" (CYR-3649)
         - seconds_to_duration no longer puts seconds directly after hours,

@@ -15,6 +15,21 @@ use Sub::Util ();
 binmode(Test::More->builder->$_, q{:encoding(UTF-8)})
   for qw(output failure_output todo_output);
 
+# Call $code, but die if it runs too long, so that a conversion stuck in a loop
+# fails one test instead of hanging the whole run.
+sub timed (&) {
+  my ($code) = @_;
+
+  local $SIG{ALRM} = sub { die "conversion timed out\n" };
+  alarm 5;
+  my $ok = eval { $code->(); 1 };
+  my $error = $@;
+  alarm 0;
+
+  die $error unless $ok;
+  return;
+}
+
 # Like is(), but gets the value by calling $code, and treats an exception as a
 # failure of this test rather than the end of the whole file.
 sub is_lived {
@@ -23,7 +38,7 @@ sub is_lived {
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
   my $got;
-  unless (eval { $got = $code->(); 1 }) {
+  unless (eval { timed { $got = $code->() }; 1 }) {
     my $error = $@;
     fail($desc);
     diag("died: $error");
@@ -105,7 +120,7 @@ sub is_rejected {
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-  my $ok = eval { $func->($input); 1 };
+  my $ok = eval { timed { $func->($input) }; 1 };
   my $error = $@;
 
   (my $desc = $input) =~ s/\n/\\n/g;
@@ -307,6 +322,37 @@ subtest "invalid seconds" => sub {
   seconds_rejected("\N{THAI DIGIT THREE}",   $non_number);
   seconds_rejected("1.\N{THAI DIGIT THREE}", $non_number);
 };
+
+subtest "large seconds" => sub {
+  my $too_big        = qr{Whole seconds exceed 9007199254740991};
+  my $signed_too_big = qr{seconds_to_signed_duration.*Whole seconds exceed};
+
+  seconds_rejected('9007199254740992',   $too_big);
+  seconds_rejected('1' . '0' x 30,       $too_big);
+  seconds_rejected('9' x 400,            $too_big);
+  seconds_rejected('9007199254740992.5', $too_big);
+
+  signed_seconds_rejected('-9007199254740992', $signed_too_big);
+  signed_seconds_rejected('-1' . '0' x 30,     $signed_too_big);
+  signed_seconds_rejected('-' . '9' x 400,     $signed_too_big);
+
+  round_trip('9007199254740991',    'P104249991374DT7H36M31S');
+  round_trip('0009007199254740991', 'P104249991374DT7H36M31S');
+
+  # One second short of a whole day, where an inexact quotient would be most
+  # likely to round up to the next day.
+  round_trip('9007199254713599', 'P104249991373DT23H59M59S');
+
+  signed_round_trip('-9007199254740991', '-P104249991374DT7H36M31S');
+
+  # Round-tripping would compare the fraction as a float, where it's lost.
+  is_lived(
+    sub { seconds_to_duration('9007199254740991.5') },
+    'P104249991374DT7H36M31.5S',
+    'fractional seconds are kept separately at the whole-seconds limit',
+  );
+};
+
 
 subtest "signed round trips" => sub {
   signed_round_trip('0',          'P0D');
