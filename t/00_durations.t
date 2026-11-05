@@ -290,6 +290,7 @@ subtest "malformed durations" => sub {
 subtest "invalid seconds" => sub {
   my $non_number = qr{Non-number value provided};
 
+  seconds_rejected("",       $non_number);
   seconds_rejected("60\n",   $non_number);
   seconds_rejected("60.5\n", $non_number);
   seconds_rejected(" 60",    $non_number);
@@ -354,6 +355,9 @@ subtest "malformed signed durations" => sub {
 subtest "invalid signed seconds" => sub {
   my $non_number = qr{Non-number value provided};
 
+  signed_seconds_rejected('',      $non_number);
+  signed_seconds_rejected('-',     $non_number);
+  signed_seconds_rejected('+',     $non_number);
   signed_seconds_rejected('--5',   $non_number);
   signed_seconds_rejected('+-5',   $non_number);
   signed_seconds_rejected('- 5',   $non_number);

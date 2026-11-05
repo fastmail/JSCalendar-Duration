@@ -120,6 +120,10 @@ sub seconds_to_duration {
 sub _seconds_to_duration {
   my ($func, $input, $toparse) = @_;
 
+  unless (length $toparse) {
+    croak("Usage: $func(\$seconds). (Non-number value provided: '$input')");
+  }
+
   my $dec = q{};
 
   # RFC 8984 forbids trailing zeros in the fraction, and forbids a fraction
