@@ -9,76 +9,42 @@ use JSCalendar::Duration qw(
   duration_to_seconds
 );
 
-my @tests = (
-  '0'        => 'P0D',
-  '0.0'      => 'P0D',
-  '0.1'      => 'PT0.1S',
-  '.1'       => 'PT0.1S',
-  '1'        => 'PT1S',
-  '1.0'      => 'PT1S',
-  '1.1'      => 'PT1.1S',
-  '59'       => 'PT59S',
-  '59.8'     => 'PT59.8S',
-  '60'       => 'PT1M',
-  '60.5'     => 'PT1M0.5S',
-  '61'       => 'PT1M1S',
-  '61.1'     => 'PT1M1.1S',
-  '3599'     => 'PT59M59S',
-  '3599.9'   => 'PT59M59.9S',
-  '3600'     => 'PT1H',
-  '3600.5'   => 'PT1H0.5S',
-  '3601'     => 'PT1H1S',
-  '3660.5'   => 'PT1H1M0.5S',
-  '86399'    => 'PT23H59M59S',
-  '86400'    => 'P1D',
-  '86400.5'  => 'P1DT0.5S',
-  '86401'    => 'P1DT1S',
-  '86460.25' => 'P1DT1M0.25S',
-  '172799'   => 'P1DT23H59M59S',
-  '172800'   => 'P2D',
-  '172801'   => 'P2DT1S',
-  '172801.1' => 'P2DT1.1S',
-  '604800'   => 'P1W',
-  '604801'   => 'P7DT1S',
-  '691200'   => 'P8D', # You must not have P1W1D
-);
+binmode(Test::More->builder->$_, q{:encoding(UTF-8)})
+  for qw(output failure_output todo_output);
 
-subtest "seconds_to_duration" => sub {
-  for (my $i = 0; $i < @tests; $i += 2) {
-    my ($input, $expect) = ($tests[$i], $tests[$i+1]);
+# Check that $seconds converts to $duration, and that $duration converts back
+# to the same number of seconds.
+sub round_trip {
+  my ($seconds, $duration) = @_;
 
-    is(
-      seconds_to_duration($input),
-      $expect,
-      sprintf("%-10s -> %-10s", $input, $expect),
-    );
-  }
-};
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-subtest "duration_to_seconds" => sub {
-  for (my $i = 0; $i < @tests; $i += 2) {
-    my ($expect, $input) = ($tests[$i], $tests[$i+1]);
+  is(
+    seconds_to_duration($seconds),
+    $duration,
+    sprintf("%-10s -> %s", $seconds, $duration),
+  );
 
-    is(
-      duration_to_seconds($input) + 0,
-      $expect + 0,
-      sprintf("%-15s -> %-10s", $input, $expect),
-    );
-  }
-};
+  is(
+    duration_to_seconds($duration) + 0,
+    $seconds + 0,
+    sprintf("%-10s <- %s", $seconds, $duration),
+  );
+}
 
-subtest "non-ASCII" => sub {
-  # ๓ - U+00E53 - THAI DIGIT THREE
-  my $bogus = "P\N{THAI DIGIT THREE}D";
-  my $ok = eval {
-    duration_to_seconds($bogus);
-    1;
-  };
+# Check only that $duration parses to $seconds; for valid durations that are
+# not what seconds_to_duration would produce, like P1W1D.
+sub duration_parses {
+  my ($duration, $seconds) = @_;
 
-  my $error = $@;
-  ok(!$ok, "non-ASCII duration strings are forbidden");
-  like($error, qr/ASCII/, "...and the error mentions ASCII");
-};
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  is(
+    duration_to_seconds($duration) + 0,
+    $seconds + 0,
+    sprintf("%-10s -> %s", $duration, $seconds),
+  );
+}
 
 sub duration_rejected {
   my ($input, $error_re) = @_;
@@ -91,6 +57,45 @@ sub duration_rejected {
   ok(!$ok, "'$input' is rejected")
     and like($error, $error_re, "...with the expected error");
 }
+
+subtest "round trips" => sub {
+  round_trip('0',        'P0D');
+  round_trip('0.0',      'P0D');
+  round_trip('0.1',      'PT0.1S');
+  round_trip('.1',       'PT0.1S');
+  round_trip('1',        'PT1S');
+  round_trip('1.0',      'PT1S');
+  round_trip('1.1',      'PT1.1S');
+  round_trip('59',       'PT59S');
+  round_trip('59.8',     'PT59.8S');
+  round_trip('60',       'PT1M');
+  round_trip('60.5',     'PT1M0.5S');
+  round_trip('61',       'PT1M1S');
+  round_trip('61.1',     'PT1M1.1S');
+  round_trip('3599',     'PT59M59S');
+  round_trip('3599.9',   'PT59M59.9S');
+  round_trip('3600',     'PT1H');
+  round_trip('3600.5',   'PT1H0.5S');
+  round_trip('3601',     'PT1H1S');
+  round_trip('3660.5',   'PT1H1M0.5S');
+  round_trip('86399',    'PT23H59M59S');
+  round_trip('86400',    'P1D');
+  round_trip('86400.5',  'P1DT0.5S');
+  round_trip('86401',    'P1DT1S');
+  round_trip('86460.25', 'P1DT1M0.25S');
+  round_trip('172799',   'P1DT23H59M59S');
+  round_trip('172800',   'P2D');
+  round_trip('172801',   'P2DT1S');
+  round_trip('172801.1', 'P2DT1.1S');
+  round_trip('604800',   'P1W');
+  round_trip('604801',   'P7DT1S');
+  round_trip('691200',   'P8D');
+};
+
+subtest "non-ASCII" => sub {
+  # ๓ - U+00E53 - THAI DIGIT THREE
+  duration_rejected("P\N{THAI DIGIT THREE}D", qr/ASCII/);
+};
 
 subtest "empty components" => sub {
   duration_rejected('P',    qr{no components after 'P'});
