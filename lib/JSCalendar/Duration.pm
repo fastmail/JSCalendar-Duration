@@ -138,12 +138,10 @@ sub seconds_to_duration {
     $toparse -= 1;
   }
 
-  $durtime .= "${seconds}" if $seconds;
-
   if ($dec) {
-    $durtime .= $durtime ? ".${dec}S" : "0.${dec}S";
+    $durtime .= "${seconds}.${dec}S";
   } elsif ($seconds) {
-    $durtime .= "S";
+    $durtime .= "${seconds}S";
   }
 
   # P<zero>D
