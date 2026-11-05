@@ -8,7 +8,8 @@ Revision history for {{$dist->name}}
           durations over the same limit, which used to give imprecise
           results, or "Inf"
         - seconds_to_duration no longer omits the whole seconds before a
-          fraction, as in "PT1M.5S"; it now produces "PT1M0.5S" (CYR-3649)
+          fraction, as in "PT1M.5S"; it now produces "PT1M0.5S" (thanks, Asif
+          Islam!)
         - seconds_to_duration no longer puts seconds directly after hours,
           as in "PT1H1S", which the grammar forbids; it now produces
           "PT1H0M1S"
