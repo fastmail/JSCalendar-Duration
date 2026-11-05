@@ -87,9 +87,13 @@ sub seconds_to_duration {
 
   my $toparse = $input;
 
-  my $dec;
+  my $dec = q{};
 
-  $dec = $1 if $toparse =~ s/\.(\d+)$//;
+  # RFC 8984 forbids trailing zeros in the fraction, and forbids a fraction
+  # that is entirely zero, so we drop them, possibly leaving nothing.
+  if ($toparse =~ s/\.(\d+)$//) {
+    ($dec = $1) =~ s/0+\z//;
+  }
 
   # .1 becomes "", we want 0 after
   $toparse ||= 0;
@@ -138,9 +142,9 @@ sub seconds_to_duration {
 
   # The grammar only permits seconds after minutes, so if we have hours and
   # seconds, we need minutes even if there are zero of them.
-  $durtime .= "${minutes}M" if $minutes || ($hours && ($seconds || $dec));
+  $durtime .= "${minutes}M" if $minutes || ($hours && ($seconds || length $dec));
 
-  if ($dec) {
+  if (length $dec) {
     $durtime .= "${seconds}.${dec}S";
   } elsif ($seconds) {
     $durtime .= "${seconds}S";

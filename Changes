@@ -6,6 +6,8 @@ Revision history for {{$dist->name}}
         - seconds_to_duration no longer puts seconds directly after hours,
           as in "PT1H1S", which the grammar forbids; it now produces
           "PT1H0M1S"
+        - seconds_to_duration no longer produces fractions with trailing
+          zeros, like "PT1.50S", or fractions of zero, like "PT0.00S"
 
 0.005     2026-10-02 13:28:58-04:00 America/New_York
         - duration_to_seconds now rejects durations with no components,

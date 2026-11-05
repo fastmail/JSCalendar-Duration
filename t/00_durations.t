@@ -61,20 +61,28 @@ sub duration_rejected {
 subtest "round trips" => sub {
   round_trip('0',        'P0D');
   round_trip('0.0',      'P0D');
+  round_trip('0.00',     'P0D');
+  round_trip('0.050',    'PT0.05S');
   round_trip('0.1',      'PT0.1S');
   round_trip('.1',       'PT0.1S');
   round_trip('1',        'PT1S');
   round_trip('1.0',      'PT1S');
   round_trip('1.1',      'PT1.1S');
+  round_trip('1.01',     'PT1.01S');
+  round_trip('1.10',     'PT1.1S');
+  round_trip('1.50',     'PT1.5S');
   round_trip('59',       'PT59S');
   round_trip('59.8',     'PT59.8S');
   round_trip('60',       'PT1M');
   round_trip('60.5',     'PT1M0.5S');
+  round_trip('60.00',    'PT1M');
   round_trip('61',       'PT1M1S');
   round_trip('61.1',     'PT1M1.1S');
   round_trip('3599',     'PT59M59S');
   round_trip('3599.9',   'PT59M59.9S');
   round_trip('3600',     'PT1H');
+  round_trip('3600.000', 'PT1H');
+  round_trip('3600.10',  'PT1H0M0.1S');
   round_trip('3600.5',   'PT1H0M0.5S');
   round_trip('3601',     'PT1H0M1S');
   round_trip('3659',     'PT1H0M59S');
@@ -83,6 +91,7 @@ subtest "round trips" => sub {
   round_trip('7201.1',   'PT2H0M1.1S');
   round_trip('86399',    'PT23H59M59S');
   round_trip('86400',    'P1D');
+  round_trip('86400.0',  'P1D');
   round_trip('86400.5',  'P1DT0.5S');
   round_trip('86401',    'P1DT1S');
   round_trip('86460.25', 'P1DT1M0.25S');
