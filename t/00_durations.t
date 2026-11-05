@@ -102,8 +102,12 @@ subtest "round trips" => sub {
   round_trip('172801',   'P2DT1S');
   round_trip('172801.1', 'P2DT1.1S');
   round_trip('604800',   'P1W');
+  round_trip('604800.0', 'P1W');
+  round_trip('604800.5', 'P7DT0.5S');
   round_trip('604801',   'P7DT1S');
   round_trip('691200',   'P8D');
+  round_trip('1209600',    'P2W');
+  round_trip('1209600.25', 'P14DT0.25S');
 };
 
 subtest "non-ASCII" => sub {

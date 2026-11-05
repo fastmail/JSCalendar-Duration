@@ -111,7 +111,7 @@ sub seconds_to_duration {
     $toparse -= 86400;
   }
 
-  if ($days && $days % 7 == 0 && $toparse == 0) {
+  if ($days && $days % 7 == 0 && $toparse == 0 && !length $dec) {
     return 'P' . ($days/7) . "W";
   }
 
