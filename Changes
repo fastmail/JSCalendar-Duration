@@ -16,6 +16,8 @@ Revision history for {{$dist->name}}
           component, like "P1W1D" or "P1WT1H", as RFC 8984 permits
         - duration_to_seconds now rejects seconds directly after hours, like
           "PT1H1S", which the grammar forbids
+        - duration_to_seconds now rejects fractional seconds with trailing
+          zeros, like "PT1.50S" or "PT1.0S", which RFC 8984 forbids
 
 0.005     2026-10-02 13:28:58-04:00 America/New_York
         - duration_to_seconds now rejects durations with no components,

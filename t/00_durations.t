@@ -175,6 +175,21 @@ subtest "seconds directly after hours" => sub {
   duration_parses('PT1M1S',   61);
 };
 
+subtest "trailing zeros in fractions" => sub {
+  my $zero_frac = qr{fractional seconds may not end in zero};
+
+  duration_rejected('PT1.0S',       $zero_frac);
+  duration_rejected('PT0.0S',       $zero_frac);
+  duration_rejected('PT1.50S',      $zero_frac);
+  duration_rejected('PT1.000S',     $zero_frac);
+  duration_rejected('PT1M0.10S',    $zero_frac);
+  duration_rejected('P1DT1H0M1.0S', $zero_frac);
+
+  duration_parses('PT1.05S', 1.05);
+  duration_parses('PT10S',   10);
+  duration_parses('PT0S',    0);
+};
+
 subtest "non-ASCII" => sub {
   # ๓ - U+00E53 - THAI DIGIT THREE
   duration_rejected("P\N{THAI DIGIT THREE}D", qr/ASCII/);

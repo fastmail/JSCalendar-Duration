@@ -69,14 +69,22 @@ sub duration_to_seconds {
     $has_minutes = 1;
   }
 
-  if ($toparse =~ s/^(\d+(?:\.\d+)?)S//) {
+  if ($toparse =~ s/^(\d+(\.\d+)?)S//) {
+    my ($value, $fraction) = ($1, $2);
+
     # In the grammar, dur-hour may only be followed by dur-minute, so seconds
     # can't come right after hours: PT1H1S must be PT1H0M1S.
     if ($has_hours && !$has_minutes) {
       croak("Invalid duration '$input', seconds may not follow hours without minutes");
     }
 
-    $seconds += $1;
+    # RFC 8984: "Fractional second values MUST NOT have trailing zeros", and
+    # that includes a fraction of all zeros.
+    if (defined $fraction && $fraction =~ /0\z/) {
+      croak("Invalid duration '$input', fractional seconds may not end in zero");
+    }
+
+    $seconds += $value;
   }
 
   if (length $toparse) {
