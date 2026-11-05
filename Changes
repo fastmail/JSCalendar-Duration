@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.006     2026-11-05 14:51:15-05:00 America/New_York
         - seconds_to_duration and seconds_to_signed_duration now reject
           whole seconds above 2**53 - 1; very large inputs used to make them
           loop forever, and they are now much faster on large inputs
