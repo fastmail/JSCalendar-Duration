@@ -129,14 +129,16 @@ sub seconds_to_duration {
     $toparse -= 60;
   }
 
-  $durtime .= "${minutes}M" if $minutes;
-
   my $seconds = 0;
 
   while ($toparse >= 1) {
     $seconds++;
     $toparse -= 1;
   }
+
+  # The grammar only permits seconds after minutes, so if we have hours and
+  # seconds, we need minutes even if there are zero of them.
+  $durtime .= "${minutes}M" if $minutes || ($hours && ($seconds || $dec));
 
   if ($dec) {
     $durtime .= "${seconds}.${dec}S";
