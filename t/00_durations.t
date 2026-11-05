@@ -12,6 +12,24 @@ use JSCalendar::Duration qw(
 binmode(Test::More->builder->$_, q{:encoding(UTF-8)})
   for qw(output failure_output todo_output);
 
+# Like is(), but gets the value by calling $code, and treats an exception as a
+# failure of this test rather than the end of the whole file.
+sub is_lived {
+  my ($code, $expect, $desc) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my $got;
+  unless (eval { $got = $code->(); 1 }) {
+    my $error = $@;
+    fail($desc);
+    diag("died: $error");
+    return;
+  }
+
+  return is($got, $expect, $desc);
+}
+
 # Check that $seconds converts to $duration, and that $duration converts back
 # to the same number of seconds.
 sub round_trip {
@@ -19,14 +37,14 @@ sub round_trip {
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-  is(
-    seconds_to_duration($seconds),
+  is_lived(
+    sub { seconds_to_duration($seconds) },
     $duration,
     sprintf("%-10s -> %s", $seconds, $duration),
   );
 
-  is(
-    duration_to_seconds($duration) + 0,
+  is_lived(
+    sub { duration_to_seconds($duration) + 0 },
     $seconds + 0,
     sprintf("%-10s <- %s", $seconds, $duration),
   );
@@ -39,12 +57,13 @@ sub duration_parses {
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-  is(
-    duration_to_seconds($duration) + 0,
+  is_lived(
+    sub { duration_to_seconds($duration) + 0 },
     $seconds + 0,
     sprintf("%-10s -> %s", $duration, $seconds),
   );
 }
+
 
 sub duration_rejected {
   my ($input, $error_re) = @_;
