@@ -143,6 +143,24 @@ subtest "round trips" => sub {
   round_trip('1209600.25', 'P14DT0.25S');
 };
 
+subtest "valid but non-canonical durations" => sub {
+  duration_parses('P0W',              0);
+  duration_parses('P1W0D',            604800);
+  duration_parses('P1W1D',            691200);
+  duration_parses('P1WT1H',           608400);
+  duration_parses('P1WT0.5S',         604800.5);
+  duration_parses('P2W3DT4H5M6.7S',   1483506.7);
+  duration_parses('P1W1DT1H0M1S',     694801);
+};
+
+subtest "misplaced weeks" => sub {
+  duration_rejected('P1D1W',  qr{expected T here: '1W'});
+  duration_rejected('P1W1W',  qr{expected T here: '1W'});
+  duration_rejected('PT1W',   qr{confused by '1W'});
+  duration_rejected('P1W1DT', qr{no components after 'T'});
+  duration_rejected('P1WT',   qr{no components after 'T'});
+};
+
 subtest "non-ASCII" => sub {
   # ๓ - U+00E53 - THAI DIGIT THREE
   duration_rejected("P\N{THAI DIGIT THREE}D", qr/ASCII/);

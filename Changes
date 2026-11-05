@@ -12,6 +12,8 @@ Revision history for {{$dist->name}}
           number of weeks plus a fraction; 604800.5 was "P1W"
         - seconds_to_duration now rejects input with a trailing newline or
           non-ASCII digits, which were accepted, sometimes yielding garbage
+        - duration_to_seconds now accepts weeks followed by days or a time
+          component, like "P1W1D" or "P1WT1H", as RFC 8984 permits
 
 0.005     2026-10-02 13:28:58-04:00 America/New_York
         - duration_to_seconds now rejects durations with no components,

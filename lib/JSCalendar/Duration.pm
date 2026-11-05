@@ -37,10 +37,10 @@ sub duration_to_seconds {
     croak("Invalid duration '$input', no components after 'P'");
   }
 
-  if ($toparse =~ s/^(\d+)W\z//) {
-    # Weeks must appear on their own, no day or time component.
+  # RFC 8984 allows weeks to be followed by days and a time component, unlike
+  # RFC 5545 and earlier JSCalendar drafts, where weeks had to stand alone.
+  if ($toparse =~ s/^(\d+)W//) {
     $seconds += (86400 * 7 * $1);
-    return $seconds;
   }
 
   if ($toparse =~ s/^(\d+)D//) {
