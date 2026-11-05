@@ -18,10 +18,17 @@ sub duration_to_seconds {
   croak('Usage: duration_to_seconds($duration)')
     unless defined $input;
 
-  # Let's get that out of the way
-  return '0' if $input eq 'P0D';
+  return _duration_to_seconds($input, $input);
+}
 
-  my $toparse = $input;
+# Convert $toparse, an unsigned duration, to seconds.  $input is what the
+# public function was given, which may have more to it than $toparse, and is
+# used in error messages.
+sub _duration_to_seconds {
+  my ($input, $toparse) = @_;
+
+  # Let's get that out of the way
+  return '0' if $toparse eq 'P0D';
 
   my $seconds = 0;
 
@@ -103,7 +110,14 @@ sub seconds_to_duration {
   croak('Usage: seconds_to_duration($seconds)')
     unless defined $input;
 
-  my $toparse = $input;
+  return _seconds_to_duration('seconds_to_duration', $input, $input);
+}
+
+# Convert $toparse, a non-negative number of seconds, to a duration.  $input is
+# what the public function, named by $func, was given, which may have more to
+# it than $toparse, and both are used in error messages.
+sub _seconds_to_duration {
+  my ($func, $input, $toparse) = @_;
 
   my $dec = q{};
 
@@ -117,7 +131,7 @@ sub seconds_to_duration {
   $toparse ||= 0;
 
   if ($toparse && $toparse !~ /\A[0-9]+\z/) {
-    croak("Usage: seconds_to_duration(\$seconds). (Non-number value provided: '$input')");
+    croak("Usage: $func(\$seconds). (Non-number value provided: '$input')");
   }
 
   my ($durday, $durtime) = ("", "");
