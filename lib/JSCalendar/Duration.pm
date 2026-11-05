@@ -57,15 +57,25 @@ sub duration_to_seconds {
     croak("Invalid duration '$input', no components after 'T'");
   }
 
+  my ($has_hours, $has_minutes);
+
   if ($toparse =~ s/^(\d+)H//) {
     $seconds += (3600 * $1);
+    $has_hours = 1;
   }
 
   if ($toparse =~ s/^(\d+)M//) {
     $seconds += (60 * $1);
+    $has_minutes = 1;
   }
 
   if ($toparse =~ s/^(\d+(?:\.\d+)?)S//) {
+    # In the grammar, dur-hour may only be followed by dur-minute, so seconds
+    # can't come right after hours: PT1H1S must be PT1H0M1S.
+    if ($has_hours && !$has_minutes) {
+      croak("Invalid duration '$input', seconds may not follow hours without minutes");
+    }
+
     $seconds += $1;
   }
 

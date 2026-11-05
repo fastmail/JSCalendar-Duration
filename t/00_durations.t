@@ -161,6 +161,20 @@ subtest "misplaced weeks" => sub {
   duration_rejected('P1WT',   qr{no components after 'T'});
 };
 
+subtest "seconds directly after hours" => sub {
+  my $no_minutes = qr{seconds may not follow hours without minutes};
+
+  duration_rejected('PT1H1S',   $no_minutes);
+  duration_rejected('PT1H0.5S', $no_minutes);
+  duration_rejected('PT0H0S',   $no_minutes);
+  duration_rejected('P1DT1H1S', $no_minutes);
+  duration_rejected('P1WT1H1S', $no_minutes);
+
+  duration_parses('PT1H0M1S', 3601);
+  duration_parses('PT0H0M0S', 0);
+  duration_parses('PT1M1S',   61);
+};
+
 subtest "non-ASCII" => sub {
   # ๓ - U+00E53 - THAI DIGIT THREE
   duration_rejected("P\N{THAI DIGIT THREE}D", qr/ASCII/);
