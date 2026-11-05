@@ -7,6 +7,8 @@ use Test::More;
 use JSCalendar::Duration qw(
   seconds_to_duration
   duration_to_seconds
+  seconds_to_signed_duration
+  signed_duration_to_seconds
 );
 use Sub::Util ();
 
@@ -65,6 +67,38 @@ sub duration_parses {
   );
 }
 
+# Like round_trip, but for the signed conversions.
+sub signed_round_trip {
+  my ($seconds, $duration) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  is_lived(
+    sub { seconds_to_signed_duration($seconds) },
+    $duration,
+    sprintf("%-10s -> %s (signed)", $seconds, $duration),
+  );
+
+  is_lived(
+    sub { signed_duration_to_seconds($duration) + 0 },
+    $seconds + 0,
+    sprintf("%-10s <- %s (signed)", $seconds, $duration),
+  );
+}
+
+# Like duration_parses, but for signed durations.
+sub signed_duration_parses {
+  my ($duration, $seconds) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  is_lived(
+    sub { signed_duration_to_seconds($duration) + 0 },
+    $seconds + 0,
+    sprintf("%-10s -> %s (signed)", $duration, $seconds),
+  );
+}
+
 # Check that calling $func with $input throws an error matching $error_re.
 sub is_rejected {
   my ($func, $input, $error_re) = @_;
@@ -91,6 +125,18 @@ sub seconds_rejected {
   my ($input, $error_re) = @_;
   local $Test::Builder::Level = $Test::Builder::Level + 1;
   is_rejected(\&seconds_to_duration, $input, $error_re);
+}
+
+sub signed_duration_rejected {
+  my ($input, $error_re) = @_;
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  is_rejected(\&signed_duration_to_seconds, $input, $error_re);
+}
+
+sub signed_seconds_rejected {
+  my ($input, $error_re) = @_;
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  is_rejected(\&seconds_to_signed_duration, $input, $error_re);
 }
 
 subtest "round trips" => sub {
@@ -258,6 +304,67 @@ subtest "invalid seconds" => sub {
 
   seconds_rejected("\N{THAI DIGIT THREE}",   $non_number);
   seconds_rejected("1.\N{THAI DIGIT THREE}", $non_number);
+};
+
+subtest "signed round trips" => sub {
+  signed_round_trip('0',          'P0D');
+  signed_round_trip('-0',         'P0D');
+  signed_round_trip('-0.0',       'P0D');
+  signed_round_trip('60',         'PT1M');
+  signed_round_trip('+60',        'PT1M');
+  signed_round_trip('-60',        '-PT1M');
+  signed_round_trip('-0.5',       '-PT0.5S');
+  signed_round_trip('-.5',        '-PT0.5S');
+  signed_round_trip('-1.50',      '-PT1.5S');
+  signed_round_trip('-3601',      '-PT1H0M1S');
+  signed_round_trip('-86400',     '-P1D');
+  signed_round_trip('-604800',    '-P1W');
+  signed_round_trip('-691200.25', '-P8DT0.25S');
+};
+
+subtest "valid but non-canonical signed durations" => sub {
+  signed_duration_parses('+PT1M',  60);
+  signed_duration_parses('-P0D',   0);
+  signed_duration_parses('+P0D',   0);
+  signed_duration_parses('-PT0S',  0);
+  signed_duration_parses('-P1W1D', -691200);
+};
+
+subtest "malformed signed durations" => sub {
+  my $no_p = qr{must start with 'P'};
+
+  signed_duration_rejected('',        $no_p);
+  signed_duration_rejected('-',       $no_p);
+  signed_duration_rejected('+',       $no_p);
+  signed_duration_rejected('--PT1M',  $no_p);
+  signed_duration_rejected('+-PT1M',  $no_p);
+  signed_duration_rejected('- PT1M',  $no_p);
+  signed_duration_rejected(' -PT1M',  $no_p);
+  signed_duration_rejected('-p1d',    $no_p);
+  signed_duration_rejected('PT1M-',   qr{confused by '-'});
+  signed_duration_rejected("-PT1M\n", qr{confused by});
+  signed_duration_rejected('-P',      qr{no components after 'P'});
+  signed_duration_rejected('-PT1H1S', qr{seconds may not follow hours});
+  signed_duration_rejected('-PT1.0S', qr{fractional seconds may not end in zero});
+
+  # The error should show what was passed in, sign and all.
+  signed_duration_rejected('-PT1X',   qr{Invalid duration '-PT1X'});
+};
+
+subtest "invalid signed seconds" => sub {
+  my $non_number = qr{Non-number value provided};
+
+  signed_seconds_rejected('--5',   $non_number);
+  signed_seconds_rejected('+-5',   $non_number);
+  signed_seconds_rejected('- 5',   $non_number);
+  signed_seconds_rejected('-5 ',   $non_number);
+  signed_seconds_rejected("-5\n",  $non_number);
+  signed_seconds_rejected('5-',    $non_number);
+  signed_seconds_rejected('-abc',  $non_number);
+  signed_seconds_rejected('-1e3',  $non_number);
+
+  # The error should name the function called, and show the whole input.
+  signed_seconds_rejected('-x', qr{seconds_to_signed_duration.*'-x'});
 };
 
 done_testing;

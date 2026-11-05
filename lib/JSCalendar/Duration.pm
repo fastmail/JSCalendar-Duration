@@ -8,6 +8,7 @@ use Carp qw(croak);
 use Exporter qw(import);
 
 our @EXPORT = qw(seconds_to_duration duration_to_seconds);
+our @EXPORT_OK = qw(seconds_to_signed_duration signed_duration_to_seconds);
 
 sub duration_to_seconds {
   my $input = shift;
@@ -190,6 +191,42 @@ sub _seconds_to_duration {
   return "P" . $durday . $durtime;
 }
 
+sub signed_duration_to_seconds {
+  my $input = shift;
+
+  croak("Usage: signed_duration_to_seconds(\$duration). (Extra args provided: @_)")
+    if @_;
+
+  croak('Usage: signed_duration_to_seconds($duration)')
+    unless defined $input;
+
+  my ($sign, $duration) = $input =~ /\A([-+]?)(.*)\z/s;
+
+  my $seconds = _duration_to_seconds($input, $duration);
+
+  return($sign eq '-' && $seconds != 0 ? -$seconds : $seconds);
+}
+
+sub seconds_to_signed_duration {
+  my $input = shift;
+
+  croak("Usage: seconds_to_signed_duration(\$seconds). (Extra args provided: @_)")
+    if @_;
+
+  croak('Usage: seconds_to_signed_duration($seconds)')
+    unless defined $input;
+
+  my ($sign, $seconds) = $input =~ /\A([-+]?)(.*)\z/s;
+
+  my $duration = _seconds_to_duration(
+    'seconds_to_signed_duration',
+    $input,
+    $seconds,
+  );
+
+  return($sign eq '-' && $duration ne 'P0D' ? "-$duration" : $duration);
+}
+
 1;
 __END__
 
@@ -224,6 +261,26 @@ Converts seconds to a JSCalendar duration representation.
   my $seconds = duration_to_seconds("P1DT4H");
 
 Converts a JSCalendar duration to seconds.
+
+=head1 OPTIONAL EXPORTS
+
+These are not exported by default, but can be requested by name.
+
+=head2 seconds_to_signed_duration
+
+  # -PT15M
+  my $duration = seconds_to_signed_duration(-900);
+
+Converts seconds, which may be negative, to a JSCalendar SignedDuration.
+Negative values get a leading C<->.  Positive values and zero get no sign.
+
+=head2 signed_duration_to_seconds
+
+  # -900
+  my $seconds = signed_duration_to_seconds("-PT15M");
+
+Converts a JSCalendar SignedDuration, which may have a leading C<+> or C<->,
+to seconds, which will be negative if the duration had a leading C<->.
 
 =head1 SEE ALSO
 

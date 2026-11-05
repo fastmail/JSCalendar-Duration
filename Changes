@@ -18,6 +18,8 @@ Revision history for {{$dist->name}}
           "PT1H1S", which the grammar forbids
         - duration_to_seconds now rejects fractional seconds with trailing
           zeros, like "PT1.50S" or "PT1.0S", which RFC 8984 forbids
+        - added seconds_to_signed_duration and signed_duration_to_seconds,
+          for the SignedDuration type, exportable on request
 
 0.005     2026-10-02 13:28:58-04:00 America/New_York
         - duration_to_seconds now rejects durations with no components,
